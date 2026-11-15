@@ -1,4 +1,4 @@
-# Makara Koşusu – Gizlilik Politikası
+# Böcük Run – Gizlilik Politikası
 
 GitHub Pages ile yayınlanan gizlilik politikası sayfası.
 
