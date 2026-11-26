@@ -149,14 +149,14 @@ async function load(){$('ref').disabled=true;$('err').style.display='none';
     const today_=D.length?D[D.length-1]:[];$('lbD').innerHTML=lb(today_.map(d=>({n:v(d.f,'name'),s:v(d.f,'score')})).sort((a,b)=>b.s-a.s));
     $('lbW').innerHTML=lb(Object.values(best).sort((a,b)=>b.s-a.s));
     $('lbS').innerHTML=lb(S.map(d=>({n:v(d.f,'name'),s:Math.floor((v(d.f,'score')||0)/10000)})).sort((a,b)=>b.s-a.s)).replace(/<b>([\d.]+)<\/b>/g,'<b>$1. bölüm</b>');
-    chart();table();const t=new Date();$('upd').textContent='Son güncelleme '+pad(t.getHours())+':'+pad(t.getMinutes())+' · her 2 dakikada kendiliğinden yenilenir';
+    chart();table();const t=new Date();$('upd').textContent='Son güncelleme '+pad(t.getHours())+':'+pad(t.getMinutes())+' · her 10 dakikada kendiliğinden yenilenir';
   }catch(e){$('err').textContent='Veri alınamadı: '+e.message+'. İnternet bağlantını kontrol edip Yenile\'ye bas.';$('err').style.display='block';}
   $('ref').disabled=false;}
 $('ref').addEventListener('click',load);
 ['q','pf','af'].forEach(id=>$(id).addEventListener('input',()=>{shown=50;table();}));
 $('more').addEventListener('click',()=>{shown+=50;table();});
 document.querySelectorAll('#tbl th').forEach(th=>th.addEventListener('click',()=>{const k=th.dataset.k;if(sortK===k)sortD=-sortD;else{sortK=k;sortD=['ad','p'].includes(k)?1:-1;}table();}));
-load();setInterval(()=>{if(!document.hidden)load();},120000);
+load();setInterval(()=>{if(!document.hidden)load();},600000);
 }
 </script>
 </body>
