@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Böcük Run Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: oyunun kendi arayüzü gibi samimi ama net; bir bakışta durum.
+   IDEA: oyundaki sıralama penceresi: krem kart, lacivert çerçeve, turuncu başlık.
+   PICTURE: üstte günlük aktif / yeni oyuncu grafiği, yanında büyük rakamlar.
+   COLOUR and TYPE: lacivert #1b2a4a, krem #f4f7fd, turuncu #f39a2b, yeşil #5fbf7f; Baloo 2.
+   LAYOUT: başlık + yenile, rakam şeridi, grafik, sıralamalar, oyuncu tablosu. */
+:root{color-scheme:light dark;--bg:light-dark(#e8eef8,#101a2e);--card:light-dark(#f8faff,#182641);--ink:light-dark(#1b2a4a,#e9eefb);--mute:light-dark(#5a6b8c,#9fb0d2);--line:light-dark(#d5deee,#2a3a5c);--or:#f39a2b;--gr:#5fbf7f;--bl:#4a7fd6}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Baloo 2",system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:1240px;margin:0 auto;padding:clamp(16px,3vw,36px) max(4vw,14px)}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;justify-content:space-between;margin-bottom:18px}
+h1{margin:0;font-size:clamp(28px,4vw,42px);line-height:1.05;font-weight:800}
+h1 b{color:var(--or)}
+.meta{color:var(--mute);font-size:14px}
+button{font:inherit;font-weight:700;border:0;border-radius:14px;padding:10px 18px;min-height:44px;background:var(--gr);color:#fff;cursor:pointer;box-shadow:0 4px 0 #3f9a5e}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--or);outline-offset:2px}
+button:active{transform:translateY(2px);box-shadow:0 2px 0 #3f9a5e}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.k{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:14px 16px}
+.k span{display:block;color:var(--mute);font-size:14px;font-weight:600}
+.k b{display:block;font-size:clamp(28px,4vw,40px);line-height:1.1;font-weight:800}
+.k small{color:var(--mute);font-size:13px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:16px 18px;margin-bottom:16px}
+.card h2{margin:0 0 10px;font-size:22px;font-weight:800}
+.card h2 em{font-style:normal;color:var(--mute);font-size:15px;font-weight:600}
+.fig{position:relative;height:260px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--mute);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-1px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px}
+.bars div{display:grid;grid-template-columns:110px minmax(0,1fr) 48px;align-items:center;gap:10px;margin:6px 0;font-size:15px}
+.bars .t{height:16px;border-radius:8px;background:var(--line);overflow:hidden}.bars .t i{display:block;height:100%;background:var(--or);border-radius:8px}
+.bars b{text-align:right}
+ol.lb{list-style:none;margin:0;padding:0}
+ol.lb li{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px;padding:6px 8px;border-radius:10px;font-size:15px}
+ol.lb li:nth-child(odd){background:light-dark(#eef3fc,#1f2f50)}
+ol.lb li span:first-child{color:var(--mute);font-weight:700}
+ol.lb li span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ol.lb li b{color:var(--or);font-variant-numeric:tabular-nums}
+.tools{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+input,select{font:inherit;font-size:16px;padding:8px 12px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);min-height:44px}
+input{flex:1 1 220px}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{cursor:pointer;color:var(--mute);font-weight:700;user-select:none}
+th.on{color:var(--or)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;padding:0 8px;border-radius:8px;font-size:13px;font-weight:700;background:var(--line)}
+.err{background:#fde3e3;color:#8a1c1c;border-radius:14px;padding:12px 16px;margin-bottom:16px;display:none}
+.note{color:var(--mute);font-size:14px;margin:6px 0 0}
+.more{margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>Böcük Run <b>Panel</b></h1><div class="meta" id="upd">Yükleniyor…</div></div>
+  <button id="ref" type="button">Yenile</button>
+</header>
+<div class="err" id="err"></div>
+<section class="kpis" id="kpis"></section>
+<section class="card">
+  <h2>Son 14 gün <em>yeni ve aktif oyuncu</em></h2>
+  <div class="fig"><svg id="chart" role="img" aria-label="Son 14 gün yeni ve aktif oyuncu grafiği"></svg></div>
+  <div class="legend"><span><i style="background:var(--bl)"></i>Yeni oyuncu (ilk açılış)</span><span><i style="background:var(--or)"></i>O gün son kez oynayan</span></div>
+  <p class="note">İstatistik 1.1.26 sürümüyle başladı. Eski sürümdeki oyuncular güncelleyene kadar sayılmaz.</p>
+</section>
+<section class="grid2">
+  <div class="card"><h2>Platform ve dil</h2><div class="bars" id="plat"></div></div>
+  <div class="card"><h2>Sapan ilerlemesi <em>bu hafta ulaşılan bölüm</em></h2><div class="bars" id="slb"></div></div>
+</section>
+<section class="grid3">
+  <div class="card"><h2>Günün Makarası <em>bugün</em></h2><ol class="lb" id="lbD"></ol></div>
+  <div class="card"><h2>Haftalık Koşu <em>bu hafta</em></h2><ol class="lb" id="lbW"></ol></div>
+  <div class="card"><h2>Böcük Sapanı <em>bu hafta</em></h2><ol class="lb" id="lbS"></ol></div>
+</section>
+<section class="card">
+  <h2>Oyuncular <em id="pc"></em></h2>
+  <div class="tools">
+    <input id="q" type="search" placeholder="İsim ara" aria-label="İsim ara">
+    <select id="pf" aria-label="Platform"><option value="">Tüm platformlar</option><option value="i">iPhone</option><option value="a">Android</option></select>
+    <select id="af" aria-label="Son oynama"><option value="">Tüm zamanlar</option><option value="0">Bugün oynayanlar</option><option value="6">Son 7 gün</option></select>
+  </div>
+  <div class="scroll"><table id="tbl"><thead><tr>
+    <th data-k="ad">Ad</th><th data-k="p">Platform</th><th data-k="en">Dil</th><th data-k="ilk">İlk gün</th><th data-k="son">Son gün</th>
+    <th class="n" data-k="gun">Gün</th><th class="n" data-k="kosu">Koşu</th><th class="n" data-k="rekor">Rekor</th><th class="n" data-k="sapan">Sapan</th>
+  </tr></thead><tbody></tbody></table></div>
+  <button class="more" id="more" type="button">Daha fazla göster</button>
+  <p class="note">Kayıtlar anonimdir; isimler sıralama listelerinden eşleştirilir. Koşu sayısı oyun açılışında gönderilir, gün içindeki koşular ertesi açılışta yansır.</p>
+</section>
+</div>
+<script>
+{
+const K='AIzaSyDVNeGWNh81ZjpoRmtux2qhEBHnPN2Z-dM',B='https://firestore.googleapis.com/v1/projects/bocuk-run/databases/(default)/documents';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>Number(n||0).toLocaleString('tr-TR');
+const pad=n=>String(n).padStart(2,'0');
+const dk=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x;};
+const wkStart=()=>{const x=new Date();x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x;};
+const v=(f,k)=>{const o=f&&f[k];if(!o)return null;if(o.integerValue!=null)return +o.integerValue;if(o.stringValue!=null)return o.stringValue;if(o.booleanValue!=null)return o.booleanValue;return null;};
+async function q(col,order){const sq={from:[{collectionId:col}],limit:order?50:2000};if(order)sq.orderBy=[{field:{fieldPath:'score'},direction:'DESCENDING'}];
+  const r=await fetch(B+':runQuery?key='+K,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredQuery:sq})});
+  if(!r.ok)throw new Error('Firebase '+r.status);const j=await r.json();return (Array.isArray(j)?j:[]).filter(x=>x.document).map(x=>({id:x.document.name.split('/').pop(),f:x.document.fields||{}}));}
+let rows=[],sortK='son',sortD=-1,shown=50;
+const today=dk(new Date());
+function lb(list){return list.slice(0,10).map((r,i)=>'<li><span>'+(i+1)+'</span><span>'+esc(r.n||'(isimsiz)')+'</span><b>'+fmt(r.s)+'</b></li>').join('')||'<li><span></span><span>Henüz puan yok</span><b></b></li>';}
+function bars(el,items){const max=Math.max(1,...items.map(x=>x[1]));el.innerHTML=items.map(([l,n])=>'<div><span>'+esc(l)+'</span><span class="t"><i style="width:'+(n/max*100).toFixed(1)+'%"></i></span><b>'+fmt(n)+'</b></div>').join('');}
+function chart(){const s=$('chart'),W=s.clientWidth,H=s.clientHeight;if(!W)return;const days=[];for(let i=13;i>=0;i--)days.push(dk(addD(new Date(),-i)));
+  const nw=days.map(d=>rows.filter(r=>r.ilk===d).length),ac=days.map(d=>rows.filter(r=>r.son===d).length);const max=Math.max(1,...nw,...ac);
+  const L=34,R=8,T=12,Bm=28,cw=(W-L-R)/days.length,bw=Math.max(3,cw*0.34),y=n=>T+(H-T-Bm)*(1-n/max);let g='';
+  for(let t=0;t<=4;t++){const val=Math.round(max*t/4),yy=y(val);g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" stroke="currentColor" opacity=".12"/><text x="'+(L-6)+'" y="'+(yy+4)+'" text-anchor="end" font-size="12" fill="currentColor" opacity=".6">'+val+'</text>';}
+  days.forEach((d,i)=>{const x=L+i*cw+cw/2;g+='<rect x="'+(x-bw-1)+'" y="'+y(nw[i])+'" width="'+bw+'" height="'+(H-Bm-y(nw[i]))+'" rx="3" fill="#4a7fd6"><title>'+d+' yeni: '+nw[i]+'</title></rect>';
+    g+='<rect x="'+(x+1)+'" y="'+y(ac[i])+'" width="'+bw+'" height="'+(H-Bm-y(ac[i]))+'" rx="3" fill="#f39a2b"><title>'+d+' son oynama: '+ac[i]+'</title></rect>';
+    if(W>520||i%2===0)g+='<text x="'+x+'" y="'+(H-8)+'" text-anchor="middle" font-size="12" fill="currentColor" opacity=".6">'+d.slice(8)+'.'+d.slice(5,7)+'</text>';});
+  s.innerHTML=g;}
+const ro=new ResizeObserver(chart);ro.observe($('chart'));
+function table(){const qq=$('q').value.trim().toLocaleLowerCase('tr'),pf=$('pf').value,af=$('af').value;const lim=af===''?'':dk(addD(new Date(),-(+af)));
+  let l=rows.filter(r=>(!qq||(r.ad||'').toLocaleLowerCase('tr').includes(qq))&&(!pf||r.p===pf)&&(!lim||(r.son||'')>=lim));
+  l.sort((a,b)=>{const x=a[sortK],y=b[sortK];return (x>y?1:x<y?-1:0)*sortD;});$('pc').textContent=l.length+' kişi';
+  $('tbl').tBodies[0].innerHTML=l.slice(0,shown).map(r=>'<tr><td>'+esc(r.ad||'(isimsiz)')+'</td><td><span class="tag">'+(r.p==='i'?'iPhone':r.p==='a'?'Android':'Web')+'</span></td><td>'+(r.en?'EN':'TR')+'</td><td>'+esc(r.ilk)+'</td><td>'+esc(r.son)+'</td><td class="n">'+fmt(r.gun)+'</td><td class="n">'+fmt(r.kosu)+'</td><td class="n">'+fmt(r.rekor)+'</td><td class="n">'+fmt(r.sapan)+'</td></tr>').join('');
+  $('more').style.display=l.length>shown?'':'none';
+  document.querySelectorAll('#tbl th').forEach(th=>th.classList.toggle('on',th.dataset.k===sortK));}
+async function load(){$('ref').disabled=true;$('err').style.display='none';
+  try{const ws=wkStart(),wk=dk(ws),dcols=[];for(let i=0;i<7;i++){const d=addD(ws,i);if(dk(d)>today)break;dcols.push('daily_'+dk(d));}
+    const [P,W,S,...D]=await Promise.all([q('players'),q('week_'+wk,1),q('sapan_'+wk,1),...dcols.map(c=>q(c,1))]);
+    const names={},best={};const add=(list)=>list.forEach(d=>{const n=v(d.f,'name'),u=v(d.f,'uid')||d.id,s=v(d.f,'score')||0;if(n)names[u]=n;if(!best[u]||s>best[u].s)best[u]={n,s};});
+    D.forEach(add);add(W);S.forEach(d=>{const n=v(d.f,'name');if(n&&!names[v(d.f,'uid')||d.id])names[v(d.f,'uid')||d.id]=n;});
+    rows=P.map(d=>({ad:names[d.id]||'',p:v(d.f,'p'),en:!!v(d.f,'en'),ilk:v(d.f,'f')||'',son:v(d.f,'l')||'',gun:v(d.f,'n')||0,kosu:v(d.f,'r')||0,rekor:v(d.f,'b')||0,sapan:v(d.f,'sl')||0}));
+    const n=rows.length,act=rows.filter(r=>r.son===today).length,nw=rows.filter(r=>r.ilk===today).length,w7=rows.filter(r=>r.son>=dk(addD(new Date(),-6))).length,ret=rows.filter(r=>r.gun>1).length,slp=rows.filter(r=>r.sapan>0).length;
+    const K2=[['Toplam oyuncu',n,'1.1.26 ve sonrası'],['Bugün oynayan',act,'son girişi bugün'],['Bugün yeni',nw,'ilk açılışı bugün'],['Son 7 gün',w7,'en az bir kez oynayan'],['Geri dönen',ret,'birden fazla gün oynayan'],['Sapan oynayan',slp,slp?'ort. '+(rows.filter(r=>r.sapan>0).reduce((a,r)=>a+r.sapan,0)/slp).toFixed(1)+'. bölüm':'bu hafta']];
+    $('kpis').innerHTML=K2.map(([a,b,c])=>'<div class="k"><span>'+a+'</span><b>'+fmt(b)+'</b><small>'+c+'</small></div>').join('');
+    const ios=rows.filter(r=>r.p==='i').length,and=rows.filter(r=>r.p==='a').length,en=rows.filter(r=>r.en).length;
+    bars($('plat'),[['iPhone',ios],['Android',and],['Türkçe',n-en],['İngilizce',en]]);
+    const sb=[['0 (oynamadı)',r=>r.sapan===0],['1–10',r=>r.sapan>=1&&r.sapan<=10],['11–25',r=>r.sapan>=11&&r.sapan<=25],['26–50',r=>r.sapan>=26&&r.sapan<=50],['51–100',r=>r.sapan>=51]];
+    bars($('slb'),sb.map(([l,f])=>[l,rows.filter(f).length]));
+    const today_=D.length?D[D.length-1]:[];$('lbD').innerHTML=lb(today_.map(d=>({n:v(d.f,'name'),s:v(d.f,'score')})).sort((a,b)=>b.s-a.s));
+    $('lbW').innerHTML=lb(Object.values(best).sort((a,b)=>b.s-a.s));
+    $('lbS').innerHTML=lb(S.map(d=>({n:v(d.f,'name'),s:Math.floor((v(d.f,'score')||0)/10000)})).sort((a,b)=>b.s-a.s)).replace(/<b>([\d.]+)<\/b>/g,'<b>$1. bölüm</b>');
+    chart();table();const t=new Date();$('upd').textContent='Son güncelleme '+pad(t.getHours())+':'+pad(t.getMinutes())+' · her 2 dakikada kendiliğinden yenilenir';
+  }catch(e){$('err').textContent='Veri alınamadı: '+e.message+'. İnternet bağlantını kontrol edip Yenile\'ye bas.';$('err').style.display='block';}
+  $('ref').disabled=false;}
+$('ref').addEventListener('click',load);
+['q','pf','af'].forEach(id=>$(id).addEventListener('input',()=>{shown=50;table();}));
+$('more').addEventListener('click',()=>{shown+=50;table();});
+document.querySelectorAll('#tbl th').forEach(th=>th.addEventListener('click',()=>{const k=th.dataset.k;if(sortK===k)sortD=-sortD;else{sortK=k;sortD=['ad','p'].includes(k)?1:-1;}table();}));
+load();setInterval(()=>{if(!document.hidden)load();},120000);
+}
+</script>
+</body>
+</html>
